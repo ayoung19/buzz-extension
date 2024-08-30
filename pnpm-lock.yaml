@@ -5,6 +5,12 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  "@instantdb/core":
+    specifier: ^0.12.14
+    version: 0.12.14
+  "@instantdb/react":
+    specifier: ^0.12.14
+    version: 0.12.14(react@18.2.0)
   plasmo:
     specifier: 0.88.0
     version: 0.88.0(react-dom@18.2.0)(react@18.2.0)
@@ -555,6 +561,29 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /@instantdb/core@0.12.14:
+    resolution:
+      {
+        integrity: sha512-gEt0x0UHcWlBA4bQ6MRRMVnvCS5L9k+mSRh9E14kTi72EGnoHX74bZzWMIRF7X2HQv6+Q6+o0PQjPkF5EM1LSw==,
+      }
+    dependencies:
+      immer: 9.0.14
+      object-hash: 3.0.0
+      uuid: 9.0.1
+    dev: false
+
+  /@instantdb/react@0.12.14(react@18.2.0):
+    resolution:
+      {
+        integrity: sha512-bMOqi1/Vs/vzY6pOIiYeReZZ8fOtBtw2Zwf/dHsGmV46BBYWiW+Fj/gLss1hS4m/Eix8lvdB/F9G3g1ad8jf7w==,
+      }
+    peerDependencies:
+      react: ">=16"
+    dependencies:
+      "@instantdb/core": 0.12.14
+      react: 18.2.0
+    dev: false
 
   /@isaacs/cliui@8.0.2:
     resolution:
@@ -5093,6 +5122,13 @@ packages:
     dev: false
     optional: true
 
+  /immer@9.0.14:
+    resolution:
+      {
+        integrity: sha512-ubBeqQutOSLIFCUBN03jGeOS6a3DoYlSYwYJTa+gSKEZKU5redJIqkIdZ3JVv/4RZpfcXdAWH5zCNLWPRv2WDw==,
+      }
+    dev: false
+
   /immutable@4.3.7:
     resolution:
       {
@@ -6179,6 +6215,14 @@ packages:
         integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==,
       }
     engines: { node: ">=0.10.0" }
+    dev: false
+
+  /object-hash@3.0.0:
+    resolution:
+      {
+        integrity: sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw==,
+      }
+    engines: { node: ">= 6" }
     dev: false
 
   /once@1.4.0:
@@ -7558,6 +7602,14 @@ packages:
         integrity: sha512-6Z7Ma2aVEWisaL6TvBCy7P8rm2LQoPv6dJ7ecIaIixHcwfbJ0x7mWdbcwlIM5IGQxPZSFYeqRCqlOOeKoJYMkw==,
       }
     engines: { node: ">= 4" }
+    dev: false
+
+  /uuid@9.0.1:
+    resolution:
+      {
+        integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==,
+      }
+    hasBin: true
     dev: false
 
   /vue@3.3.4:
