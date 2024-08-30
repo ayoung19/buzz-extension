@@ -1,34 +1,69 @@
-import { id, init, tx } from "@instantdb/react";
-import { useEffect, useState } from "react";
+import { init } from "@instantdb/react";
+import { useQuery } from "@tanstack/react-query";
+import { useState, type Dispatch, type SetStateAction } from "react";
 
-const APP_ID = "d763dd10-2e46-4e73-943c-0158e8f343bf";
+import { App } from "./App";
 
-const db = init({ appId: APP_ID });
+const db = init<{
+  users: {
+    email: string;
+  };
+  messages: {
+    channelHash: string;
+    value: string;
+  };
+}>({ appId: "d763dd10-2e46-4e73-943c-0158e8f343bf" });
+export type Db = typeof db;
 
-function IndexPopup() {
-  const { isLoading, user, error } = db.useAuth();
+export const AppWrapper = () => {
+  const authQuery = db.useAuth();
 
-  useEffect(() => {
-    if (user) {
-      db.transact(tx.users[id()].update({ email: user.email }));
-    }
-  }, [user]);
+  const urlQuery = useQuery({
+    queryKey: [""],
+    queryFn: async () => {
+      const [tab] = await chrome.tabs.query({ active: true });
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+      if (tab.url === undefined) {
+        throw new Error("tab.url is undefined");
+      }
+
+      return new URL(tab.url);
+    },
+  });
+
+  if (urlQuery.isPending || authQuery.isLoading) {
+    return <></>;
   }
-  if (error) {
-    return <div>Uh oh! {error.message}</div>;
+
+  if (urlQuery.isError || authQuery.error) {
+    return [urlQuery.error?.message, authQuery.error?.message]
+      .filter((x) => x !== undefined)
+      .join(",");
   }
-  if (user) {
-    return <h1>Hello {user.email}!</h1>;
+
+  if (!authQuery.user) {
+    return (
+      <div style={{ width: "500px" }}>
+        <Login />
+      </div>
+    );
   }
+
   return (
-    <div style={{ width: "500px" }}>
-      <Login />
-    </div>
+    <App
+      db={db}
+      user={authQuery.user}
+      channels={urlQuery.data.pathname
+        .split("/")
+        .filter((x) => x.length > 0)
+        .map((x) => `/${x}`)
+        .reduce(
+          (acc, curr) => [...acc, acc[acc.length - 1] + curr],
+          [urlQuery.data.hostname],
+        )}
+    />
   );
-}
+};
 
 function Login() {
   const [sentEmail, setSentEmail] = useState("");
@@ -43,7 +78,11 @@ function Login() {
   );
 }
 
-function Email({ setSentEmail }) {
+function Email({
+  setSentEmail,
+}: {
+  setSentEmail: Dispatch<SetStateAction<string>>;
+}) {
   const [email, setEmail] = useState("");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -77,7 +116,7 @@ function Email({ setSentEmail }) {
   );
 }
 
-function MagicCode({ sentEmail }) {
+function MagicCode({ sentEmail }: { sentEmail: string }) {
   const [code, setCode] = useState("");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -140,5 +179,3 @@ const authStyles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
   },
 };
-
-export default IndexPopup;
