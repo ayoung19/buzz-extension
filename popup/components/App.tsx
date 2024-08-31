@@ -79,6 +79,7 @@ export const App = ({ db, user, channels }: Props) => {
             </Text>
             {channels.map((channel, i) => (
               <NavLink
+                key={channel}
                 label={
                   <Text size="sm">
                     {channel.substring(channel.lastIndexOf("/") + 1)}
