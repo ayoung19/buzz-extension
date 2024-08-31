@@ -23,6 +23,9 @@ dependencies:
   "@plasmohq/messaging":
     specifier: ^0.6.2
     version: 0.6.2(react@18.2.0)
+  "@plasmohq/storage":
+    specifier: ^1.12.0
+    version: 1.12.0(react@18.2.0)
   "@tabler/icons-react":
     specifier: ^3.14.0
     version: 3.14.0(react@18.2.0)
@@ -3112,6 +3115,21 @@ packages:
       - velocityjs
       - walrus
       - whiskers
+    dev: false
+
+  /@plasmohq/storage@1.12.0(react@18.2.0):
+    resolution:
+      {
+        integrity: sha512-LoCyO0PXl609ee8QKVEwVpkTyD/8WjYQhd0sxFomLxbdxsZC0LD4n8nv4nSegP5X8lYQBQnR/LMq4ZXoQh87wA==,
+      }
+    peerDependencies:
+      react: ^16.8.6 || ^17 || ^18
+    peerDependenciesMeta:
+      react:
+        optional: true
+    dependencies:
+      pify: 6.1.0
+      react: 18.2.0
     dev: false
 
   /@pnpm/config.env-replace@1.1.0:
@@ -7480,6 +7498,14 @@ packages:
     requiresBuild: true
     dev: false
     optional: true
+
+  /pify@6.1.0:
+    resolution:
+      {
+        integrity: sha512-KocF8ve28eFjjuBKKGvzOBGzG8ew2OqOOSxTTZhirkzH7h3BI1vyzqlR0qbfcDBve1Yzo3FVlWUAtCRrbVN8Fw==,
+      }
+    engines: { node: ">=14.16" }
+    dev: false
 
   /pirates@4.0.6:
     resolution:

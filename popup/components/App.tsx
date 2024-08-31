@@ -11,14 +11,11 @@ import {
   ThemeIcon,
   Title,
 } from "@mantine/core";
-import { getHotkeyHandler, useHotkeys } from "@mantine/hooks";
+import { getHotkeyHandler } from "@mantine/hooks";
 import { IconSlash } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { Db } from "./AppWrapper";
-
-const channelToChannelHash = (channel: string) =>
-  createHash("sha256").update(channel).digest("hex");
 
 interface Props {
   db: Db;
@@ -31,15 +28,10 @@ export const App = ({ db, user, channels }: Props) => {
     channels[channels.length - 1],
   );
 
-  const selfQuery = db.useQuery({
-    users: {
-      $: {
-        where: {
-          id: user.id,
-        },
-      },
-    },
-  });
+  const activeChannelHash = useMemo(
+    () => createHash("sha256").update(activeChannel).digest("hex"),
+    [activeChannel],
+  );
 
   const messagesQuery = db.useQuery({
     messages: {
@@ -47,7 +39,7 @@ export const App = ({ db, user, channels }: Props) => {
       $: {
         limit: 10,
         where: {
-          channelHash: channelToChannelHash(activeChannel),
+          channelHash: activeChannelHash,
         },
         order: {
           serverCreatedAt: "desc",
@@ -59,14 +51,16 @@ export const App = ({ db, user, channels }: Props) => {
   const [value, setValue] = useState("");
 
   useEffect(() => {
-    if (!selfQuery.data) {
-      return;
-    }
+    db.transact(tx.users[user.id].update({ email: user.email }));
+  }, [user.id, user.email]);
 
-    if (selfQuery.data.users.length === 0) {
-      db.transact(tx.users[user.id].update({ email: user.email }));
-    }
-  }, [selfQuery.data]);
+  useEffect(() => {
+    db.transact(
+      tx.users[user.id].update({
+        activeChannelHash,
+      }),
+    );
+  }, [user.id, activeChannel]);
 
   return (
     <AppShell
@@ -133,7 +127,7 @@ export const App = ({ db, user, channels }: Props) => {
                   await db.transact(
                     tx.messages[id()]
                       .update({
-                        channelHash: channelToChannelHash(activeChannel),
+                        channelHash: activeChannelHash,
                         value: value,
                       })
                       .link({ user: user.id }),

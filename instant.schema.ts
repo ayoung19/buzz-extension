@@ -5,9 +5,7 @@ const graph = i.graph(
   {
     users: i.entity({
       email: i.string().unique(),
-    }),
-    views: i.entity({
-      channelHash: i.string().indexed(),
+      activeChannelHash: i.string().optional().indexed(),
     }),
     messages: i.entity({
       channelHash: i.string().indexed(),
@@ -15,18 +13,6 @@ const graph = i.graph(
     }),
   },
   {
-    userViews: {
-      forward: {
-        on: "users",
-        has: "many",
-        label: "views",
-      },
-      reverse: {
-        on: "views",
-        has: "one",
-        label: "user",
-      },
-    },
     userMessages: {
       forward: {
         on: "users",
