@@ -14,7 +14,7 @@
     "@instantdb/core": "^0.12.14",
     "@instantdb/react": "^0.12.14",
     "@mantine/core": "6.0.21",
-    "@mantine/hooks": "6.0.21",
+    "@mantine/hooks": "^7.12.2",
     "@mantine/tiptap": "6.0.21",
     "@plasmohq/messaging": "^0.6.2",
     "@plasmohq/storage": "^1.12.0",

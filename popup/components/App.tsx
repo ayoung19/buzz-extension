@@ -12,16 +12,18 @@ import {
   ThemeIcon,
   Title,
 } from "@mantine/core";
-import { getHotkeyHandler } from "@mantine/hooks";
+import { getHotkeyHandler, useMap } from "@mantine/hooks";
 import { RichTextEditor } from "@mantine/tiptap";
 import { IconSlash } from "@tabler/icons-react";
-import { useEditor } from "@tiptap/react";
+import { useEditor, type Content } from "@tiptap/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useMessageExtensions } from "~popup/hooks/useMessageExtensions";
 
 import type { Db } from "./AppWrapper";
 import { MessageContent } from "./MessageContent";
+
+const defaultContent = "<p></p>";
 
 interface Props {
   db: Db;
@@ -33,10 +35,12 @@ export const App = ({ db, user, channels }: Props) => {
   const [activeChannel, setActiveChannel] = useState(
     channels[channels.length - 1],
   );
-
   const activeChannelHash = useMemo(
     () => createHash("sha256").update(activeChannel).digest("hex"),
     [activeChannel],
+  );
+  const channelToEditorContent = useMap<string, Content>(
+    channels.map((channel) => [channel, defaultContent]),
   );
 
   const selfQuery = db.useQuery({
@@ -48,7 +52,6 @@ export const App = ({ db, user, channels }: Props) => {
       },
     },
   });
-
   const messagesQuery = db.useQuery({
     messages: {
       user: {},
@@ -67,12 +70,12 @@ export const App = ({ db, user, channels }: Props) => {
   const messageExtensions = useMessageExtensions({
     placeholder: `Message ${activeChannel}`,
   });
-
   const editor = useEditor({
     extensions: messageExtensions,
+    content: channelToEditorContent.get(activeChannel) || defaultContent,
+    onUpdate: ({ editor }) =>
+      channelToEditorContent.set(activeChannel, editor.getHTML()),
   });
-
-  const viewport = useRef<HTMLDivElement>(null);
   const anchor = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -86,6 +89,13 @@ export const App = ({ db, user, channels }: Props) => {
           activeChannelHash,
         }),
       );
+    }
+
+    if (editor) {
+      editor.commands.setContent(
+        channelToEditorContent.get(activeChannel) || defaultContent,
+      );
+      editor.commands.focus();
     }
   }, [selfQuery.data?.users.length, user.id, activeChannel]);
 
@@ -139,7 +149,7 @@ export const App = ({ db, user, channels }: Props) => {
           Chat for {activeChannel}
         </Text>
         <Stack spacing={0} sx={{ flexGrow: 1 }}>
-          <ScrollArea viewportRef={viewport} h={1} sx={{ flexGrow: 1 }}>
+          <ScrollArea h={1} sx={{ flexGrow: 1 }}>
             {(messagesQuery.data?.messages || []).toReversed().map(
               (message) =>
                 message.user[0] && (
@@ -172,7 +182,7 @@ export const App = ({ db, user, channels }: Props) => {
                           .link({ user: user.id }),
                       );
 
-                      editor.commands.clearContent();
+                      editor.commands.clearContent(true);
                     }
                   },
                 ],
