@@ -2,20 +2,26 @@ import { createHash } from "crypto";
 import { id, tx, type User } from "@instantdb/core";
 import {
   AppShell,
+  Box,
   Header,
   Navbar,
   NavLink,
+  ScrollArea,
   Stack,
   Text,
-  Textarea,
   ThemeIcon,
   Title,
 } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
+import { RichTextEditor } from "@mantine/tiptap";
 import { IconSlash } from "@tabler/icons-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEditor } from "@tiptap/react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { useMessageExtensions } from "~popup/hooks/useMessageExtensions";
 
 import type { Db } from "./AppWrapper";
+import { MessageContent } from "./MessageContent";
 
 interface Props {
   db: Db;
@@ -33,6 +39,16 @@ export const App = ({ db, user, channels }: Props) => {
     [activeChannel],
   );
 
+  const selfQuery = db.useQuery({
+    users: {
+      $: {
+        where: {
+          id: user.id,
+        },
+      },
+    },
+  });
+
   const messagesQuery = db.useQuery({
     messages: {
       user: {},
@@ -48,19 +64,36 @@ export const App = ({ db, user, channels }: Props) => {
     },
   });
 
-  const [value, setValue] = useState("");
+  const messageExtensions = useMessageExtensions({
+    placeholder: `Message ${activeChannel}`,
+  });
+
+  const editor = useEditor({
+    extensions: messageExtensions,
+  });
+
+  const viewport = useRef<HTMLDivElement>(null);
+  const anchor = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     db.transact(tx.users[user.id].update({ email: user.email }));
   }, [user.id, user.email]);
 
   useEffect(() => {
-    db.transact(
-      tx.users[user.id].update({
-        activeChannelHash,
-      }),
-    );
-  }, [user.id, activeChannel]);
+    if (selfQuery.data?.users.length) {
+      db.transact(
+        tx.users[user.id].update({
+          activeChannelHash,
+        }),
+      );
+    }
+  }, [selfQuery.data?.users.length, user.id, activeChannel]);
+
+  useEffect(() => {
+    if (anchor.current) {
+      anchor.current.scrollIntoView();
+    }
+  }, [messagesQuery.data]);
 
   return (
     <AppShell
@@ -101,45 +134,54 @@ export const App = ({ db, user, channels }: Props) => {
         </Navbar>
       }
     >
-      <Stack spacing="xs" justify="space-between" h="100%">
+      <Stack spacing="sm" h="100%">
         <Text fz="sm" fw={500}>
           Chat for {activeChannel}
         </Text>
-        <Stack spacing={0}>
-          <Stack spacing={0}>
+        <Stack spacing={0} sx={{ flexGrow: 1 }}>
+          <ScrollArea viewportRef={viewport} h={1} sx={{ flexGrow: 1 }}>
             {(messagesQuery.data?.messages || []).toReversed().map(
               (message) =>
                 message.user[0] && (
                   <Stack spacing={0} key={message.id}>
-                    <Text fz="sm">{message.user[0].email}</Text>
-                    <Text fz="sm">{message.value}</Text>
+                    <Text fz="sm">
+                      <strong>{message.user[0].email}</strong>
+                    </Text>
+                    <MessageContent content={message.content} />
                   </Stack>
                 ),
             )}
-          </Stack>
-          <Textarea
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder={`Message ${activeChannel}`}
-            onKeyDown={getHotkeyHandler([
-              [
-                "Enter",
-                async () => {
-                  await db.transact(
-                    tx.messages[id()]
-                      .update({
-                        channelHash: activeChannelHash,
-                        value: value,
-                      })
-                      .link({ user: user.id }),
-                  );
+            <Box ref={anchor} />
+          </ScrollArea>
+          <RichTextEditor
+            editor={editor}
+            sx={(theme) => ({ p: { fontSize: theme.fontSizes.sm } })}
+          >
+            <RichTextEditor.Content
+              onKeyDown={getHotkeyHandler([
+                [
+                  "Enter",
+                  async () => {
+                    if (editor && !editor.isEmpty) {
+                      await db.transact(
+                        tx.messages[id()]
+                          .update({
+                            channelHash: activeChannelHash,
+                            content: editor.getHTML(),
+                          })
+                          .link({ user: user.id }),
+                      );
 
-                  setValue("");
-                },
-              ],
-            ])}
-            autosize
-          />
+                      editor.commands.clearContent();
+                    }
+                  },
+                ],
+              ])}
+              sx={(theme) => ({
+                ".ProseMirror": { padding: theme.spacing.sm },
+              })}
+            />
+          </RichTextEditor>
         </Stack>
       </Stack>
     </AppShell>

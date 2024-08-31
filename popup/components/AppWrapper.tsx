@@ -13,7 +13,7 @@ const db = init<{
   };
   messages: {
     channelHash: string;
-    value: string;
+    content: string;
   };
 }>({ appId: "d763dd10-2e46-4e73-943c-0158e8f343bf" });
 export type Db = typeof db;

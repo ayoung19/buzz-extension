@@ -9,7 +9,7 @@ const graph = i.graph(
     }),
     messages: i.entity({
       channelHash: i.string().indexed(),
-      value: i.string(),
+      content: i.string(),
     }),
   },
   {
