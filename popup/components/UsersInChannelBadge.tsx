@@ -1,8 +1,8 @@
 import { Badge } from "@mantine/core";
 import { useMemo } from "react";
 
-import { channelToChannelHash } from "~popup/utils/channelHash";
 import db from "~popup/utils/db";
+import { channelToChannelHash } from "~popup/utils/hash";
 
 interface Props {
   channel: string;

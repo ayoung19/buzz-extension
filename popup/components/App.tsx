@@ -1,4 +1,4 @@
-import { id, tx, type User } from "@instantdb/core";
+import { id, lookup, tx, type User } from "@instantdb/core";
 import {
   AppShell,
   Box,
@@ -18,10 +18,15 @@ import { useEditor, type Content } from "@tiptap/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useMessageExtensions } from "~popup/hooks/useMessageExtensions";
-import { channelToChannelHash } from "~popup/utils/channelHash";
+import { commonRichTextEditorStyles } from "~popup/utils/common";
 import db from "~popup/utils/db";
+import {
+  channelToChannelHash,
+  userIdAndChannelToUserIdAndChannelHash,
+} from "~popup/utils/hash";
 
 import { MessageContent } from "./MessageContent";
+import { UnreadMessagesIndicator } from "./UnreadMessagesIndicator";
 import { UsersInChannelBadge } from "./UsersInChannelBadge";
 
 const defaultContent = "<p></p>";
@@ -88,7 +93,10 @@ export const App = ({ user, channels }: Props) => {
   useEffect(() => {
     if (!selfQuery.isLoading && !selfQuery.data?.privateUsers.length) {
       db.transact([
-        tx.privateUsers[user.id].update({ email: user.email }),
+        tx.privateUsers[user.id].update({
+          email: user.email,
+          createdAt: new Date().getTime(),
+        }),
         tx.publicUsers[id()]
           .update({ displayName: user.email })
           .link({ privateUser: user.id }),
@@ -106,14 +114,26 @@ export const App = ({ user, channels }: Props) => {
 
   // Publish the channel the user is in every time it changes.
   useEffect(() => {
-    if (!selfQuery.isLoading && selfQuery.data?.privateUsers.length) {
-      db.transact(
+    if (
+      !selfQuery.isLoading &&
+      selfQuery.data?.privateUsers.length &&
+      selfQuery.data.privateUsers[0].publishedState.length
+    ) {
+      db.transact([
         tx.publishedStates[
           selfQuery.data.privateUsers[0].publishedState[0].id
         ].update({
           inChannelHash: activeChannelHash,
         }),
-      );
+        // TODO: Uncomment this and it no longer properly updates on first
+        // channel visit, only subsequent ones.
+        // tx.userIdAndChannelHashToLastRead[
+        //   lookup(
+        //     "userIdAndChannelHash",
+        //     userIdAndChannelToUserIdAndChannelHash(user.id, activeChannel),
+        //   )
+        // ].update({ lastRead: new Date().getTime() }),
+      ]);
     }
 
     if (editor) {
@@ -124,7 +144,8 @@ export const App = ({ user, channels }: Props) => {
     }
   }, [
     selfQuery.isLoading,
-    selfQuery.data?.privateUsers.length,
+    selfQuery.data?.privateUsers.length &&
+      selfQuery.data.privateUsers[0].publishedState.length,
     activeChannel,
     user.id,
   ]);
@@ -168,7 +189,11 @@ export const App = ({ user, channels }: Props) => {
                 variant="light"
                 active={channel === activeChannel}
                 onClick={() => setActiveChannel(channel)}
-                rightSection={<UsersInChannelBadge channel={channel} />}
+                rightSection={
+                  <UnreadMessagesIndicator user={user} channel={channel}>
+                    <UsersInChannelBadge channel={channel} />
+                  </UnreadMessagesIndicator>
+                }
               />
             ))}
           </Stack>
@@ -194,10 +219,7 @@ export const App = ({ user, channels }: Props) => {
             )}
             <Box ref={anchor} />
           </ScrollArea>
-          <RichTextEditor
-            editor={editor}
-            sx={(theme) => ({ p: { fontSize: theme.fontSizes.sm } })}
-          >
+          <RichTextEditor editor={editor}>
             <RichTextEditor.Content
               onKeyDown={getHotkeyHandler([
                 [
@@ -214,7 +236,6 @@ export const App = ({ user, channels }: Props) => {
                             publicUser: selfPublicUser.id,
                           }),
                       );
-
                       editor.commands.clearContent(true);
                     }
                   },
@@ -222,6 +243,7 @@ export const App = ({ user, channels }: Props) => {
               ])}
               sx={(theme) => ({
                 ".ProseMirror": { padding: theme.spacing.sm },
+                ...commonRichTextEditorStyles(theme),
               })}
             />
           </RichTextEditor>

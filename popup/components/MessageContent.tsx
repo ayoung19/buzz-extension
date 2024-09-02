@@ -1,7 +1,9 @@
 import { RichTextEditor } from "@mantine/tiptap";
-import { useEditor } from "@tiptap/react";
+import { generateJSON, useEditor } from "@tiptap/react";
+import { useMemo } from "react";
 
 import { useMessageExtensions } from "~popup/hooks/useMessageExtensions";
+import { commonRichTextEditorStyles } from "~popup/utils/common";
 
 interface Props {
   content: string;
@@ -17,11 +19,13 @@ export const MessageContent = ({ content }: Props) => {
   });
 
   return (
-    <RichTextEditor
-      editor={editor}
-      sx={(theme) => ({ p: { fontSize: theme.fontSizes.sm }, border: "none" })}
-    >
-      <RichTextEditor.Content sx={{ ".ProseMirror": { padding: 0 } }} />
+    <RichTextEditor editor={editor} sx={{ border: "none" }}>
+      <RichTextEditor.Content
+        sx={(theme) => ({
+          ".ProseMirror": { padding: 0 },
+          ...commonRichTextEditorStyles(theme),
+        })}
+      />
     </RichTextEditor>
   );
 };
