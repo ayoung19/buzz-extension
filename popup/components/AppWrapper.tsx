@@ -7,9 +7,15 @@ import { Storage } from "@plasmohq/storage";
 import { App } from "./App";
 
 const db = init<{
-  users: {
+  privateUsers: {
     email: string;
-    activeChannelHash?: string;
+  };
+  publicUsers: {
+    displayName: string;
+  };
+  publishedStates: {
+    onChannelHash?: string;
+    inChannelHash?: string;
   };
   messages: {
     channelHash: string;

@@ -44,7 +44,9 @@ export const App = ({ db, user, channels }: Props) => {
   );
 
   const selfQuery = db.useQuery({
-    users: {
+    privateUsers: {
+      publishedState: {},
+      publicUser: {},
       $: {
         where: {
           id: user.id,
@@ -52,9 +54,12 @@ export const App = ({ db, user, channels }: Props) => {
       },
     },
   });
+  const selfPublicUser =
+    selfQuery.data?.privateUsers[0] &&
+    selfQuery.data?.privateUsers[0].publicUser[0];
   const messagesQuery = db.useQuery({
     messages: {
-      user: {},
+      publicUser: {},
       $: {
         limit: 10,
         where: {
@@ -78,15 +83,35 @@ export const App = ({ db, user, channels }: Props) => {
   });
   const anchor = useRef<HTMLDivElement>(null);
 
+  // Create private user, public user, and initial published state if query for
+  // self has finished loading and no records were found.
   useEffect(() => {
-    db.transact(tx.users[user.id].update({ email: user.email }));
-  }, [user.id, user.email]);
+    if (!selfQuery.isLoading && !selfQuery.data?.privateUsers.length) {
+      db.transact([
+        tx.privateUsers[user.id].update({ email: user.email }),
+        tx.publicUsers[id()]
+          .update({ displayName: user.email })
+          .link({ privateUser: user.id }),
+        tx.publishedStates[id()]
+          .update({ inChannelHash: null, onChannelHash: null })
+          .link({ privateUser: user.id }),
+      ]);
+    }
+  }, [
+    selfQuery.isLoading,
+    selfQuery.data?.privateUsers.length,
+    user.id,
+    user.email,
+  ]);
 
+  // Publish the channel the user is in every time it changes.
   useEffect(() => {
-    if (selfQuery.data?.users.length) {
+    if (!selfQuery.isLoading && selfQuery.data?.privateUsers.length) {
       db.transact(
-        tx.users[user.id].update({
-          activeChannelHash,
+        tx.publishedStates[
+          selfQuery.data.privateUsers[0].publishedState[0].id
+        ].update({
+          inChannelHash: activeChannelHash,
         }),
       );
     }
@@ -97,7 +122,12 @@ export const App = ({ db, user, channels }: Props) => {
       );
       editor.commands.focus();
     }
-  }, [selfQuery.data?.users.length, user.id, activeChannel]);
+  }, [
+    selfQuery.isLoading,
+    selfQuery.data?.privateUsers.length,
+    activeChannel,
+    user.id,
+  ]);
 
   useEffect(() => {
     if (anchor.current) {
@@ -149,13 +179,13 @@ export const App = ({ db, user, channels }: Props) => {
           Chat for {activeChannel}
         </Text>
         <Stack spacing={0} sx={{ flexGrow: 1 }}>
-          <ScrollArea h={1} sx={{ flexGrow: 1 }}>
+          <ScrollArea type="always" h={1} sx={{ flexGrow: 1 }}>
             {(messagesQuery.data?.messages || []).toReversed().map(
               (message) =>
-                message.user[0] && (
+                message.publicUser[0] && (
                   <Stack spacing={0} key={message.id}>
                     <Text fz="sm">
-                      <strong>{message.user[0].email}</strong>
+                      <strong>{message.publicUser[0].displayName}</strong>
                     </Text>
                     <MessageContent content={message.content} />
                   </Stack>
@@ -172,14 +202,16 @@ export const App = ({ db, user, channels }: Props) => {
                 [
                   "Enter",
                   async () => {
-                    if (editor && !editor.isEmpty) {
+                    if (editor && !editor.isEmpty && selfPublicUser) {
                       await db.transact(
                         tx.messages[id()]
                           .update({
                             channelHash: activeChannelHash,
                             content: editor.getHTML(),
                           })
-                          .link({ user: user.id }),
+                          .link({
+                            publicUser: selfPublicUser.id,
+                          }),
                       );
 
                       editor.commands.clearContent(true);
