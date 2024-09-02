@@ -1,38 +1,52 @@
-import { createHash } from "crypto";
 import { id, tx, type User } from "@instantdb/core";
 import {
   AppShell,
+  Box,
   Header,
   Navbar,
   NavLink,
+  ScrollArea,
   Stack,
   Text,
-  Textarea,
   ThemeIcon,
   Title,
 } from "@mantine/core";
-import { getHotkeyHandler, useHotkeys } from "@mantine/hooks";
+import { getHotkeyHandler, useMap } from "@mantine/hooks";
+import { RichTextEditor } from "@mantine/tiptap";
 import { IconSlash } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEditor, type Content } from "@tiptap/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { Db } from "./AppWrapper";
+import { useMessageExtensions } from "~popup/hooks/useMessageExtensions";
+import { channelToChannelHash } from "~popup/utils/channelHash";
+import db from "~popup/utils/db";
 
-const channelToChannelHash = (channel: string) =>
-  createHash("sha256").update(channel).digest("hex");
+import { MessageContent } from "./MessageContent";
+import { UsersInChannelBadge } from "./UsersInChannelBadge";
+
+const defaultContent = "<p></p>";
 
 interface Props {
-  db: Db;
   user: User;
   channels: string[];
 }
 
-export const App = ({ db, user, channels }: Props) => {
+export const App = ({ user, channels }: Props) => {
   const [activeChannel, setActiveChannel] = useState(
     channels[channels.length - 1],
   );
+  const activeChannelHash = useMemo(
+    () => channelToChannelHash(activeChannel),
+    [activeChannel],
+  );
+  const channelToEditorContent = useMap<string, Content>(
+    channels.map((channel) => [channel, defaultContent]),
+  );
 
   const selfQuery = db.useQuery({
-    users: {
+    privateUsers: {
+      publishedState: {},
+      publicUser: {},
       $: {
         where: {
           id: user.id,
@@ -40,14 +54,16 @@ export const App = ({ db, user, channels }: Props) => {
       },
     },
   });
-
+  const selfPublicUser =
+    selfQuery.data?.privateUsers[0] &&
+    selfQuery.data?.privateUsers[0].publicUser[0];
   const messagesQuery = db.useQuery({
     messages: {
-      user: {},
+      publicUser: {},
       $: {
         limit: 10,
         where: {
-          channelHash: channelToChannelHash(activeChannel),
+          channelHash: activeChannelHash,
         },
         order: {
           serverCreatedAt: "desc",
@@ -56,17 +72,68 @@ export const App = ({ db, user, channels }: Props) => {
     },
   });
 
-  const [value, setValue] = useState("");
+  const messageExtensions = useMessageExtensions({
+    placeholder: `Message ${activeChannel}`,
+  });
+  const editor = useEditor({
+    extensions: messageExtensions,
+    content: channelToEditorContent.get(activeChannel) || defaultContent,
+    onUpdate: ({ editor }) =>
+      channelToEditorContent.set(activeChannel, editor.getHTML()),
+  });
+  const anchor = useRef<HTMLDivElement>(null);
+
+  // Create private user, public user, and initial published state if query for
+  // self has finished loading and no records were found.
+  useEffect(() => {
+    if (!selfQuery.isLoading && !selfQuery.data?.privateUsers.length) {
+      db.transact([
+        tx.privateUsers[user.id].update({ email: user.email }),
+        tx.publicUsers[id()]
+          .update({ displayName: user.email })
+          .link({ privateUser: user.id }),
+        tx.publishedStates[id()]
+          .update({ inChannelHash: null, onChannelHash: null })
+          .link({ privateUser: user.id }),
+      ]);
+    }
+  }, [
+    selfQuery.isLoading,
+    selfQuery.data?.privateUsers.length,
+    user.id,
+    user.email,
+  ]);
+
+  // Publish the channel the user is in every time it changes.
+  useEffect(() => {
+    if (!selfQuery.isLoading && selfQuery.data?.privateUsers.length) {
+      db.transact(
+        tx.publishedStates[
+          selfQuery.data.privateUsers[0].publishedState[0].id
+        ].update({
+          inChannelHash: activeChannelHash,
+        }),
+      );
+    }
+
+    if (editor) {
+      editor.commands.setContent(
+        channelToEditorContent.get(activeChannel) || defaultContent,
+      );
+      editor.commands.focus();
+    }
+  }, [
+    selfQuery.isLoading,
+    selfQuery.data?.privateUsers.length,
+    activeChannel,
+    user.id,
+  ]);
 
   useEffect(() => {
-    if (!selfQuery.data) {
-      return;
+    if (anchor.current) {
+      anchor.current.scrollIntoView();
     }
-
-    if (selfQuery.data.users.length === 0) {
-      db.transact(tx.users[user.id].update({ email: user.email }));
-    }
-  }, [selfQuery.data]);
+  }, [messagesQuery.data]);
 
   return (
     <AppShell
@@ -85,6 +152,7 @@ export const App = ({ db, user, channels }: Props) => {
             </Text>
             {channels.map((channel, i) => (
               <NavLink
+                key={channel}
                 label={
                   <Text size="sm">
                     {channel.substring(channel.lastIndexOf("/") + 1)}
@@ -100,51 +168,63 @@ export const App = ({ db, user, channels }: Props) => {
                 variant="light"
                 active={channel === activeChannel}
                 onClick={() => setActiveChannel(channel)}
+                rightSection={<UsersInChannelBadge channel={channel} />}
               />
             ))}
           </Stack>
         </Navbar>
       }
     >
-      <Stack spacing="xs" justify="space-between" h="100%">
+      <Stack spacing="sm" h="100%">
         <Text fz="sm" fw={500}>
           Chat for {activeChannel}
         </Text>
-        <Stack spacing={0}>
-          <Stack spacing={0}>
+        <Stack spacing={0} sx={{ flexGrow: 1 }}>
+          <ScrollArea type="always" h={1} sx={{ flexGrow: 1 }}>
             {(messagesQuery.data?.messages || []).toReversed().map(
               (message) =>
-                message.user[0] && (
+                message.publicUser[0] && (
                   <Stack spacing={0} key={message.id}>
-                    <Text fz="sm">{message.user[0].email}</Text>
-                    <Text fz="sm">{message.value}</Text>
+                    <Text fz="sm">
+                      <strong>{message.publicUser[0].displayName}</strong>
+                    </Text>
+                    <MessageContent content={message.content} />
                   </Stack>
                 ),
             )}
-          </Stack>
-          <Textarea
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder={`Message ${activeChannel}`}
-            onKeyDown={getHotkeyHandler([
-              [
-                "Enter",
-                async () => {
-                  await db.transact(
-                    tx.messages[id()]
-                      .update({
-                        channelHash: channelToChannelHash(activeChannel),
-                        value: value,
-                      })
-                      .link({ user: user.id }),
-                  );
+            <Box ref={anchor} />
+          </ScrollArea>
+          <RichTextEditor
+            editor={editor}
+            sx={(theme) => ({ p: { fontSize: theme.fontSizes.sm } })}
+          >
+            <RichTextEditor.Content
+              onKeyDown={getHotkeyHandler([
+                [
+                  "Enter",
+                  async () => {
+                    if (editor && !editor.isEmpty && selfPublicUser) {
+                      await db.transact(
+                        tx.messages[id()]
+                          .update({
+                            channelHash: activeChannelHash,
+                            content: editor.getHTML(),
+                          })
+                          .link({
+                            publicUser: selfPublicUser.id,
+                          }),
+                      );
 
-                  setValue("");
-                },
-              ],
-            ])}
-            autosize
-          />
+                      editor.commands.clearContent(true);
+                    }
+                  },
+                ],
+              ])}
+              sx={(theme) => ({
+                ".ProseMirror": { padding: theme.spacing.sm },
+              })}
+            />
+          </RichTextEditor>
         </Stack>
       </Stack>
     </AppShell>

@@ -1,19 +1,15 @@
-import { init } from "@instantdb/react";
 import { useQuery } from "@tanstack/react-query";
-import { useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+
+import { Storage } from "@plasmohq/storage";
+
+import db from "~popup/utils/db";
 
 import { App } from "./App";
 
-const db = init<{
-  users: {
-    email: string;
-  };
-  messages: {
-    channelHash: string;
-    value: string;
-  };
-}>({ appId: "d763dd10-2e46-4e73-943c-0158e8f343bf" });
-export type Db = typeof db;
+const storage = new Storage({
+  area: "local",
+});
 
 export const AppWrapper = () => {
   const authQuery = db.useAuth();
@@ -30,6 +26,15 @@ export const AppWrapper = () => {
       return new URL(tab.url);
     },
   });
+
+  useEffect(() => {
+    chrome.runtime.connect({ name: "popup" });
+  }, []);
+
+  useEffect(() => {
+    storage.set("userId", authQuery.user?.id);
+    storage.set("userRefreshToken", authQuery.user?.refresh_token);
+  }, [authQuery.user?.id, authQuery.user?.refresh_token]);
 
   if (urlQuery.isPending || authQuery.isLoading) {
     return <></>;
@@ -51,7 +56,6 @@ export const AppWrapper = () => {
 
   return (
     <App
-      db={db}
       user={authQuery.user}
       channels={urlQuery.data.pathname
         .split("/")
