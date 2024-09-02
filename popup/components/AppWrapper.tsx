@@ -1,28 +1,11 @@
-import { init } from "@instantdb/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
 import { Storage } from "@plasmohq/storage";
 
-import { App } from "./App";
+import db from "~popup/utils/db";
 
-const db = init<{
-  privateUsers: {
-    email: string;
-  };
-  publicUsers: {
-    displayName: string;
-  };
-  publishedStates: {
-    onChannelHash?: string;
-    inChannelHash?: string;
-  };
-  messages: {
-    channelHash: string;
-    content: string;
-  };
-}>({ appId: "d763dd10-2e46-4e73-943c-0158e8f343bf" });
-export type Db = typeof db;
+import { App } from "./App";
 
 const storage = new Storage({
   area: "local",
@@ -73,7 +56,6 @@ export const AppWrapper = () => {
 
   return (
     <App
-      db={db}
       user={authQuery.user}
       channels={urlQuery.data.pathname
         .split("/")

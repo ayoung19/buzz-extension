@@ -1,4 +1,3 @@
-import { createHash } from "crypto";
 import { id, tx, type User } from "@instantdb/core";
 import {
   AppShell,
@@ -19,24 +18,25 @@ import { useEditor, type Content } from "@tiptap/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useMessageExtensions } from "~popup/hooks/useMessageExtensions";
+import { channelToChannelHash } from "~popup/utils/channelHash";
+import db from "~popup/utils/db";
 
-import type { Db } from "./AppWrapper";
 import { MessageContent } from "./MessageContent";
+import { UsersInChannelBadge } from "./UsersInChannelBadge";
 
 const defaultContent = "<p></p>";
 
 interface Props {
-  db: Db;
   user: User;
   channels: string[];
 }
 
-export const App = ({ db, user, channels }: Props) => {
+export const App = ({ user, channels }: Props) => {
   const [activeChannel, setActiveChannel] = useState(
     channels[channels.length - 1],
   );
   const activeChannelHash = useMemo(
-    () => createHash("sha256").update(activeChannel).digest("hex"),
+    () => channelToChannelHash(activeChannel),
     [activeChannel],
   );
   const channelToEditorContent = useMap<string, Content>(
@@ -168,6 +168,7 @@ export const App = ({ db, user, channels }: Props) => {
                 variant="light"
                 active={channel === activeChannel}
                 onClick={() => setActiveChannel(channel)}
+                rightSection={<UsersInChannelBadge channel={channel} />}
               />
             ))}
           </Stack>
