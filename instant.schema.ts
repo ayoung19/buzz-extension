@@ -14,6 +14,9 @@ const graph = i.graph(
       onChannelHash: i.string().optional().indexed(),
       inChannelHash: i.string().optional().indexed(),
     }),
+    bookmarkedChannels: i.entity({
+      channel: i.string(),
+    }),
     userIdAndChannelHashToLastRead: i.entity({
       userIdAndChannelHash: i.string().unique(),
       lastRead: i.number(),
@@ -44,6 +47,18 @@ const graph = i.graph(
       },
       reverse: {
         on: "publishedStates",
+        has: "one",
+        label: "privateUser",
+      },
+    },
+    privateUserBookmarkedChannels: {
+      forward: {
+        on: "privateUsers",
+        has: "many",
+        label: "bookmarkedChannels",
+      },
+      reverse: {
+        on: "bookmarkedChannels",
         has: "one",
         label: "privateUser",
       },

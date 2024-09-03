@@ -1,30 +1,28 @@
 import { id, lookup, tx, type User } from "@instantdb/core";
 import {
+  Anchor,
   AppShell,
   Box,
+  Group,
   Header,
   Navbar,
   NavLink,
   ScrollArea,
   Stack,
   Text,
-  ThemeIcon,
   Title,
 } from "@mantine/core";
 import { getHotkeyHandler, useMap } from "@mantine/hooks";
 import { RichTextEditor } from "@mantine/tiptap";
-import { IconSlash } from "@tabler/icons-react";
 import { useEditor, type Content } from "@tiptap/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useMessageExtensions } from "~popup/hooks/useMessageExtensions";
 import { commonRichTextEditorStyles } from "~popup/utils/common";
 import db from "~popup/utils/db";
-import {
-  channelToChannelHash,
-  userIdAndChannelToUserIdAndChannelHash,
-} from "~popup/utils/hash";
+import { channelToChannelHash } from "~popup/utils/hash";
 
+import { BookmarkChannelIcon } from "./BookmarkChannelIcon";
 import { MessageContent } from "./MessageContent";
 import { UnreadMessagesIndicator } from "./UnreadMessagesIndicator";
 import { UsersInChannelBadge } from "./UsersInChannelBadge";
@@ -76,6 +74,26 @@ export const App = ({ user, channels }: Props) => {
       },
     },
   });
+  const bookmarkedChannelsQuery = db.useQuery({
+    bookmarkedChannels: {
+      $: {
+        where: {
+          "privateUser.id": user.id,
+        },
+      },
+    },
+  });
+  const bookmarkedChannels = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (bookmarkedChannelsQuery.data?.bookmarkedChannels || []).map(
+            ({ channel }) => channel,
+          ),
+        ),
+      ),
+    [bookmarkedChannelsQuery.data?.bookmarkedChannels || []],
+  );
 
   const messageExtensions = useMessageExtensions({
     placeholder: `Message ${activeChannel}`,
@@ -166,44 +184,67 @@ export const App = ({ user, channels }: Props) => {
         </Header>
       }
       navbar={
-        <Navbar width={{ base: 200 }} p="xs">
-          <Stack spacing="xs">
-            <Text fz="xs" fw={600} c="dimmed">
-              CHATS
-            </Text>
-            {channels.map((channel, i) => (
-              <NavLink
-                key={channel}
-                label={
-                  <Text size="sm">
-                    {channel.substring(channel.lastIndexOf("/") + 1)}
+        <Navbar width={{ base: 250 }} p="xs">
+          <Stack justify="space-between" h="100%">
+            <Stack spacing={0}>
+              {bookmarkedChannels.length > 0 && (
+                <>
+                  <Text fz="xs" fw={600} c="dimmed" mb={0}>
+                    BOOKMARKED CHATS
                   </Text>
-                }
-                icon={
-                  i > 0 && (
-                    <ThemeIcon color="blue" variant="light">
-                      <IconSlash size="1rem" />
-                    </ThemeIcon>
-                  )
-                }
-                variant="light"
-                active={channel === activeChannel}
-                onClick={() => setActiveChannel(channel)}
-                rightSection={
-                  <UnreadMessagesIndicator user={user} channel={channel}>
-                    <UsersInChannelBadge channel={channel} />
-                  </UnreadMessagesIndicator>
-                }
-              />
-            ))}
+                  {bookmarkedChannels.map((channel) => (
+                    <NavLink
+                      key={channel}
+                      label={<Text size="sm">{channel}</Text>}
+                      variant="light"
+                      active={channel === activeChannel}
+                      onClick={() => setActiveChannel(channel)}
+                      rightSection={
+                        <UnreadMessagesIndicator user={user} channel={channel}>
+                          <UsersInChannelBadge channel={channel} />
+                        </UnreadMessagesIndicator>
+                      }
+                    />
+                  ))}
+                </>
+              )}
+              <Text fz="xs" fw={600} c="dimmed" mb={0}>
+                ACTIVE TAB CHATS
+              </Text>
+              {channels.map((channel, i) => (
+                <NavLink
+                  key={channel}
+                  label={
+                    <Text size="sm">
+                      {channel.substring(channel.lastIndexOf("/") + 1)}
+                    </Text>
+                  }
+                  variant="light"
+                  active={channel === activeChannel}
+                  onClick={() => setActiveChannel(channel)}
+                  rightSection={
+                    <UnreadMessagesIndicator user={user} channel={channel}>
+                      <UsersInChannelBadge channel={channel} />
+                    </UnreadMessagesIndicator>
+                  }
+                />
+              ))}
+            </Stack>
+            <Stack spacing={0}></Stack>
           </Stack>
         </Navbar>
       }
     >
       <Stack spacing="sm" h="100%">
-        <Text fz="sm" fw={500}>
-          Chat for {activeChannel}
-        </Text>
+        <Group position="apart" align="center">
+          <Text fz="sm" fw={500}>
+            <>Chat for </>
+            <Anchor href={`https://${activeChannel}`} target="_blank">
+              {activeChannel}
+            </Anchor>
+          </Text>
+          <BookmarkChannelIcon user={user} channel={activeChannel} />
+        </Group>
         <Stack spacing={0} sx={{ flexGrow: 1 }}>
           <ScrollArea type="always" h={1} sx={{ flexGrow: 1 }}>
             {(messagesQuery.data?.messages || []).toReversed().map(
