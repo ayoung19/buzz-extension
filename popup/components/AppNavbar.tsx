@@ -3,11 +3,17 @@ import { Navbar, NavLink, Stack, Text } from "@mantine/core";
 import { useEffect, useMemo } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 
+import { Storage } from "@plasmohq/storage";
+
 import db from "~popup/utils/db";
 import { channelToChannelHash } from "~popup/utils/hash";
 
 import { UnreadMessagesIndicator } from "./UnreadMessagesIndicator";
 import { UsersInChannelBadge } from "./UsersInChannelBadge";
+
+const storage = new Storage({
+  area: "local",
+});
 
 interface Props {
   user: User;
@@ -18,7 +24,7 @@ export const AppNavbar = ({ user, channels }: Props) => {
   const location = useLocation();
   const history = useHistory();
 
-  const bookmarkedChannelsQuery = db.useQuery({
+  const userBookmarkedChannelsQuery = db.useQuery({
     bookmarkedChannels: {
       $: {
         where: {
@@ -28,19 +34,19 @@ export const AppNavbar = ({ user, channels }: Props) => {
     },
   });
 
-  const bookmarkedChannels = useMemo(
+  const userBookmarkedChannels = useMemo(
     () =>
       Array.from(
         new Set(
-          (bookmarkedChannelsQuery.data?.bookmarkedChannels || []).map(
+          (userBookmarkedChannelsQuery.data?.bookmarkedChannels || []).map(
             ({ channel }) => channel,
           ),
         ),
       ),
-    [bookmarkedChannelsQuery.data?.bookmarkedChannels || []],
+    [userBookmarkedChannelsQuery.data?.bookmarkedChannels || []],
   );
 
-  const publishedStatesQuery = db.useQuery({
+  const userPublishedStatesQuery = db.useQuery({
     publishedStates: {
       $: {
         where: {
@@ -50,14 +56,15 @@ export const AppNavbar = ({ user, channels }: Props) => {
     },
   });
 
-  const privateUserPublishedStateId = (publishedStatesQuery.data
+  const userPublishedStateId = (userPublishedStatesQuery.data
     ?.publishedStates || [])[0]?.id;
 
   // Publish the channel the user is in every time it changes.
   useEffect(() => {
-    if (privateUserPublishedStateId) {
+    if (userPublishedStateId) {
+      storage.set("userPublishedStateId", userPublishedStateId);
       db.transact([
-        tx.publishedStates[privateUserPublishedStateId].update({
+        tx.publishedStates[userPublishedStateId].update({
           inChannelHash: location.pathname.startsWith("/channels/")
             ? channelToChannelHash(location.pathname.replace("/channels/", ""))
             : null,
@@ -72,18 +79,18 @@ export const AppNavbar = ({ user, channels }: Props) => {
         // ].update({ lastRead: new Date().getTime() }),
       ]);
     }
-  }, [location.pathname, privateUserPublishedStateId, user.id]);
+  }, [location.pathname, userPublishedStateId, user.id]);
 
   return (
     <Navbar width={{ base: 250 }} p="xs">
       <Stack justify="space-between" h="100%">
         <Stack spacing={0}>
-          {bookmarkedChannels.length > 0 && (
+          {userBookmarkedChannels.length > 0 && (
             <>
               <Text fz="xs" fw={600} c="dimmed" mb={0}>
                 BOOKMARKED CHATS
               </Text>
-              {bookmarkedChannels.map((channel) => (
+              {userBookmarkedChannels.map((channel) => (
                 <NavLink
                   key={channel}
                   label={<Text size="sm">{channel}</Text>}

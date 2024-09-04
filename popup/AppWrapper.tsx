@@ -31,9 +31,8 @@ export const AppWrapper = () => {
   }, []);
 
   useEffect(() => {
-    storage.set("userId", authQuery.user?.id);
     storage.set("userRefreshToken", authQuery.user?.refresh_token);
-  }, [authQuery.user?.id, authQuery.user?.refresh_token]);
+  }, [authQuery.user?.refresh_token]);
 
   if (urlQuery.isPending || authQuery.isLoading) {
     return <></>;
