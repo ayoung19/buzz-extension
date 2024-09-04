@@ -4,7 +4,6 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Storage } from "@plasmohq/storage";
 
 import db from "~popup/utils/db";
-
 import { App } from "./App";
 
 const storage = new Storage({

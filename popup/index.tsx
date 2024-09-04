@@ -1,7 +1,6 @@
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-import { AppWrapper } from "./components/AppWrapper";
+import { AppWrapper } from "./AppWrapper";
 
 const queryClient = new QueryClient();
 
