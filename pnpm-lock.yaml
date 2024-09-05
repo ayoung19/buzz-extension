@@ -9,11 +9,11 @@ dependencies:
     specifier: ^11.13.3
     version: 11.13.3(@types/react@18.2.48)(react@18.2.0)
   "@instantdb/core":
-    specifier: ^0.12.19
-    version: 0.12.19
+    specifier: ^0.12.21
+    version: 0.12.21
   "@instantdb/react":
-    specifier: ^0.12.19
-    version: 0.12.19(react@18.2.0)
+    specifier: ^0.12.21
+    version: 0.12.21(react@18.2.0)
   "@mantine/core":
     specifier: 6.0.21
     version: 6.0.21(@emotion/react@11.13.3)(@mantine/hooks@7.12.2)(@types/react@18.2.48)(react-dom@18.2.0)(react@18.2.0)
@@ -68,6 +68,9 @@ dependencies:
   react-router-dom:
     specifier: 5.3.3
     version: 5.3.3(react@18.2.0)
+  zod:
+    specifier: ^3.23.8
+    version: 3.23.8
 
 devDependencies:
   "@ianvs/prettier-plugin-sort-imports":
@@ -885,10 +888,10 @@ packages:
       - supports-color
     dev: true
 
-  /@instantdb/core@0.12.19:
+  /@instantdb/core@0.12.21:
     resolution:
       {
-        integrity: sha512-vbduoT+XBG4dEJt0SGs71Jx5wQsXGzlut/fI8H4xDoD9KuXTXDfBYw+8oL535FTZdcUx9dc7WSfn0IzAa7lRqQ==,
+        integrity: sha512-HdWO9ReTi4m7aZIaFzpwjzI4eJQLe2/8ogLS70QMAKh1WxGV7ndj+0NTrbtRXKOl0ClPtPhM39XkE3PU50/ocg==,
       }
     dependencies:
       immer: 9.0.14
@@ -896,15 +899,15 @@ packages:
       uuid: 9.0.1
     dev: false
 
-  /@instantdb/react@0.12.19(react@18.2.0):
+  /@instantdb/react@0.12.21(react@18.2.0):
     resolution:
       {
-        integrity: sha512-LZDXyK3ozH8eCKQj1G923OIe9eWxvN7lIsFZQKsFBe7vYR9JoVxnE/GHJRgyK2zN/UnfAb+N2tpItt72jzKJ6A==,
+        integrity: sha512-QobXDQxvxFVrylMzEL6d+JOI+F/6cxIhtJMh0QqZ3iVruXjbojh8/oqqful1yX0FaHUYeksvw77d6itBrGSqFw==,
       }
     peerDependencies:
       react: ">=16"
     dependencies:
-      "@instantdb/core": 0.12.19
+      "@instantdb/core": 0.12.21
       react: 18.2.0
     dev: false
 
@@ -10037,4 +10040,11 @@ packages:
     engines: { node: ">=14.13.1" }
     dependencies:
       css-what: 6.1.0
+    dev: false
+
+  /zod@3.23.8:
+    resolution:
+      {
+        integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==,
+      }
     dev: false

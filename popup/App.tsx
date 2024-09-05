@@ -5,10 +5,10 @@ import { type Content } from "@tiptap/react";
 import { useEffect } from "react";
 import { MemoryRouter, Redirect, Route, Switch } from "react-router-dom";
 
-import { Channel } from "~popup/pages/Channel";
-import db from "~popup/utils/db";
-
 import { AppNavbar } from "./components/AppNavbar";
+import { ChannelPage } from "./pages/ChannelPage";
+import { SettingsPage } from "./pages/SettingsPage";
+import db from "./utils/db";
 
 interface Props {
   user: User;
@@ -71,13 +71,16 @@ export const App = ({ user, channels }: Props) => {
           <Route
             path="/channels/:channel+"
             render={({ match }) => (
-              <Channel
+              <ChannelPage
                 user={user}
                 channel={match.params.channel}
                 channelToEditorContent={channelToEditorContent}
               />
             )}
           />
+          <Route path="/settings">
+            <SettingsPage user={user} />
+          </Route>
         </Switch>
       </AppShell>
     </MemoryRouter>

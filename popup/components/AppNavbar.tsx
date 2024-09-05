@@ -1,10 +1,12 @@
 import { tx, type User } from "@instantdb/core";
-import { Navbar, NavLink, Stack, Text } from "@mantine/core";
+import { Navbar, NavLink, Stack, Text, ThemeIcon } from "@mantine/core";
+import { IconSettings } from "@tabler/icons-react";
 import { useEffect, useMemo } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 
 import { Storage } from "@plasmohq/storage";
 
+import { useSettings } from "~popup/hooks/useSettings";
 import db from "~popup/utils/db";
 import { channelToChannelHash } from "~popup/utils/hash";
 
@@ -23,6 +25,7 @@ interface Props {
 export const AppNavbar = ({ user, channels }: Props) => {
   const location = useLocation();
   const history = useHistory();
+  const { settings } = useSettings();
 
   const userBookmarkedChannelsQuery = db.useQuery({
     bookmarkedChannels: {
@@ -61,6 +64,10 @@ export const AppNavbar = ({ user, channels }: Props) => {
 
   // Publish the channel the user is in every time it changes.
   useEffect(() => {
+    if (!settings?.privacy.anonymouslyPublishActiveChat) {
+      return;
+    }
+
     if (userPublishedStateId) {
       storage.set("userPublishedStateId", userPublishedStateId);
       db.transact([
@@ -79,7 +86,12 @@ export const AppNavbar = ({ user, channels }: Props) => {
         // ].update({ lastRead: new Date().getTime() }),
       ]);
     }
-  }, [location.pathname, userPublishedStateId, user.id]);
+  }, [
+    settings?.privacy.anonymouslyPublishActiveChat,
+    location.pathname,
+    userPublishedStateId,
+    user.id,
+  ]);
 
   return (
     <Navbar width={{ base: 250 }} p="xs">
@@ -128,7 +140,19 @@ export const AppNavbar = ({ user, channels }: Props) => {
             />
           ))}
         </Stack>
-        <Stack spacing={0}></Stack>
+        <Stack spacing={0}>
+          <NavLink
+            label="Settings"
+            variant="light"
+            active={location.pathname === "/settings"}
+            onClick={() => history.push(`/settings`)}
+            icon={
+              <ThemeIcon color="blue" variant="light">
+                <IconSettings size="1rem" />
+              </ThemeIcon>
+            }
+          />
+        </Stack>
       </Stack>
     </Navbar>
   );

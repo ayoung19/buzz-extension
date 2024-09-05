@@ -20,7 +20,7 @@ interface Props {
   channelToEditorContent: Map<string, Content>;
 }
 
-export const Channel = ({ user, channel, channelToEditorContent }: Props) => {
+export const ChannelPage = ({ user, channel, channelToEditorContent }: Props) => {
   const publicSelfQuery = db.useQuery({
     publicUsers: {
       $: {
