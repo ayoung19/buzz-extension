@@ -1,18 +1,25 @@
-import { type User } from "@instantdb/core";
+import { lookup, type User } from "@instantdb/core";
 import { Navbar, NavLink, Stack, Text, ThemeIcon } from "@mantine/core";
 import { IconSettings } from "@tabler/icons-react";
 import { useEffect, useMemo } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 
+
+
 import { Storage } from "@plasmohq/storage";
+
+
 
 import { useSettings } from "~popup/hooks/useSettings";
 import db from "~popup/utils/db";
-import { channelToChannelHash } from "~popup/utils/hash";
+import { channelToChannelHash, userIdAndChannelToUserIdAndChannelHash } from "~popup/utils/hash";
+
+
 
 import { UnreadMessagesIndicator } from "./UnreadMessagesIndicator";
 import { UsersInChannelBadge } from "./UsersInChannelBadge";
 import { UsersOnChannelBadge } from "./UsersOnChannelBadge";
+
 
 const storage = new Storage({
   area: "local",
@@ -70,21 +77,30 @@ export const AppNavbar = ({ user, channels }: Props) => {
 
     if (userPublishedStateId) {
       storage.set("userPublishedStateId", userPublishedStateId);
-      db.transact([
-        db.tx.publishedStates[userPublishedStateId]!.update({
-          inChannelHash: location.pathname.startsWith("/channels/")
-            ? channelToChannelHash(location.pathname.replace("/channels/", ""))
-            : undefined,
-        }),
-        // TODO: Uncomment this and it no longer properly updates on first
-        // channel visit, only subsequent ones.
-        // tx.userIdAndChannelHashToLastRead[
-        //   lookup(
-        //     "userIdAndChannelHash",
-        //     userIdAndChannelToUserIdAndChannelHash(user.id, activeChannel),
-        //   )
-        // ].update({ lastRead: new Date().getTime() }),
-      ]);
+
+      if (location.pathname.startsWith("/channels/")) {
+        const channel = location.pathname.replace("/channels/", "");
+
+        db.transact([
+          db.tx.publishedStates[userPublishedStateId]!.update({
+            inChannelHash: channelToChannelHash(channel),
+          }),
+          // TODO: Uncomment this and it no longer properly updates on first
+          // channel visit, only subsequent ones.
+          // db.tx.userIdAndChannelHashToLastRead[
+          //   lookup(
+          //     "userIdAndChannelHash",
+          //     userIdAndChannelToUserIdAndChannelHash(user.id, channel),
+          //   )
+          // ]!.update({ lastRead: new Date().getTime() }),
+        ]);
+      } else {
+        db.transact(
+          db.tx.publishedStates[userPublishedStateId]!.update({
+            inChannelHash: undefined,
+          }),
+        );
+      }
     }
   }, [
     settings?.privacy.anonymouslyPublishActiveChat,
@@ -120,14 +136,14 @@ export const AppNavbar = ({ user, channels }: Props) => {
                   variant="light"
                   active={`/channels/${channel}` === location.pathname}
                   onClick={() => history.push(`/channels/${channel}`)}
-                  // rightSection={
-                  //   <UnreadMessagesIndicator user={user} channel={channel}>
-                  //     <Stack spacing="xs">
-                  //       <UsersInChannelBadge channel={channel} />
-                  //       <UsersOnChannelBadge channel={channel} />
-                  //     </Stack>
-                  //   </UnreadMessagesIndicator>
-                  // }
+                  rightSection={
+                    <UnreadMessagesIndicator user={user} channel={channel}>
+                      <Stack spacing="xs">
+                        <UsersInChannelBadge channel={channel} />
+                        {/* <UsersOnChannelBadge channel={channel} /> */}
+                      </Stack>
+                    </UnreadMessagesIndicator>
+                  }
                   noWrap
                 />
               ))}
@@ -154,14 +170,14 @@ export const AppNavbar = ({ user, channels }: Props) => {
               variant="light"
               active={`/channels/${channel}` === location.pathname}
               onClick={() => history.push(`/channels/${channel}`)}
-              // rightSection={
-              //   <UnreadMessagesIndicator user={user} channel={channel}>
-              //     <Stack spacing="xs">
-              //       <UsersInChannelBadge channel={channel} />
-              //       <UsersOnChannelBadge channel={channel} />
-              //     </Stack>
-              //   </UnreadMessagesIndicator>
-              // }
+              rightSection={
+                <UnreadMessagesIndicator user={user} channel={channel}>
+                  <Stack spacing="xs">
+                    <UsersInChannelBadge channel={channel} />
+                    {/* <UsersOnChannelBadge channel={channel} /> */}
+                  </Stack>
+                </UnreadMessagesIndicator>
+              }
               noWrap
             />
           ))}
