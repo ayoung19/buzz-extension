@@ -1,4 +1,4 @@
-import { id, tx, type User } from "@instantdb/core";
+import { id, type User } from "@instantdb/core";
 import { ActionIcon } from "@mantine/core";
 import { IconStar, IconStarFilled } from "@tabler/icons-react";
 
@@ -21,12 +21,11 @@ export const BookmarkChannelIcon = ({ user, channel }: Props) => {
     },
   });
 
-  if (!bookmarkedChannelsQuery.data) {
+  if (bookmarkedChannelsQuery.isLoading || bookmarkedChannelsQuery.error) {
     return null;
   }
 
-  const isBookmarked =
-    !!bookmarkedChannelsQuery.data?.bookmarkedChannels.length;
+  const isBookmarked = !!bookmarkedChannelsQuery.data.bookmarkedChannels.length;
 
   return (
     <ActionIcon
@@ -34,13 +33,13 @@ export const BookmarkChannelIcon = ({ user, channel }: Props) => {
         isBookmarked
           ? db.transact(
               bookmarkedChannelsQuery.data.bookmarkedChannels.map(({ id }) =>
-                tx.bookmarkedChannels[id].delete(),
+                db.tx.bookmarkedChannels[id]!.delete(),
               ),
             )
           : db.transact(
-              tx.bookmarkedChannels[id()]
-                .update({ channel })
-                .link({ privateUser: user.id }),
+              db.tx.bookmarkedChannels[id()]!.update({ channel }).link({
+                privateUser: user.id,
+              }),
             )
       }
     >

@@ -1,26 +1,13 @@
-import { init, tx } from "@instantdb/core";
+import { init_experimental } from "@instantdb/core";
 
 import { Storage } from "@plasmohq/storage";
 
-const db = init<{
-  privateUsers: {
-    email: string;
-  };
-  publicUsers: {
-    displayName: string;
-  };
-  publishedStates: {
-    onChannelHash?: string;
-    inChannelHash?: string;
-  };
-  bookmarkedChannels: {
-    channel: string;
-  };
-  messages: {
-    channelHash: string;
-    content: string;
-  };
-}>({ appId: "d763dd10-2e46-4e73-943c-0158e8f343bf" });
+import graph from "~instant.schema";
+
+const db = init_experimental({
+  appId: "d763dd10-2e46-4e73-943c-0158e8f343bf",
+  schema: graph,
+});
 
 const storage = new Storage({
   area: "local",
@@ -35,8 +22,8 @@ chrome.runtime.onConnect.addListener(function (port) {
       if (userRefreshToken && userPublishedStateId) {
         await db.auth.signInWithToken(userRefreshToken);
         await db.transact(
-          tx.publishedStates[userPublishedStateId].update({
-            inChannelHash: null,
+          db.tx.publishedStates[userPublishedStateId]!.update({
+            inChannelHash: undefined,
           }),
         );
       }

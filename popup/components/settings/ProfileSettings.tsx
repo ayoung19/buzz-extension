@@ -10,7 +10,6 @@ interface Props {
 export const ProfileSettings = ({ user }: Props) => {
   const privateUserQuery = db.useQuery({
     privateUsers: {
-      publicUser: {},
       $: {
         where: {
           id: user.id,
@@ -19,7 +18,7 @@ export const ProfileSettings = ({ user }: Props) => {
     },
   });
 
-  const email = (privateUserQuery.data?.privateUsers || [])[0]?.email;
+  const email = privateUserQuery.data?.privateUsers[0]?.email;
 
   return (
     <Card>

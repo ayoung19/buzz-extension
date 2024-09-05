@@ -1,4 +1,4 @@
-import { id, tx, type User } from "@instantdb/core";
+import { id, type User } from "@instantdb/core";
 import { AppShell, Header, Title } from "@mantine/core";
 import { useMap } from "@mantine/hooks";
 import { type Content } from "@tiptap/react";
@@ -33,16 +33,17 @@ export const App = ({ user, channels }: Props) => {
   useEffect(() => {
     if (!selfQuery.isLoading && !selfQuery.data?.privateUsers.length) {
       db.transact([
-        tx.privateUsers[user.id].update({
+        db.tx.privateUsers[user.id]!.update({
           email: user.email,
           createdAt: new Date().getTime(),
         }),
-        tx.publicUsers[id()]
-          .update({ displayName: user.email })
-          .link({ privateUser: user.id }),
-        tx.publishedStates[id()]
-          .update({ inChannelHash: null, onChannelHash: null })
-          .link({ privateUser: user.id }),
+        db.tx.publicUsers[id()]!.update({ displayName: user.email }).link({
+          privateUser: user.id,
+        }),
+        db.tx.publishedStates[id()]!.update({
+          inChannelHash: undefined,
+          onChannelHash: undefined,
+        }).link({ privateUser: user.id }),
       ]);
     }
   }, [

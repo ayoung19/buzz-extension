@@ -1,4 +1,4 @@
-import { tx, type User } from "@instantdb/core";
+import { type User } from "@instantdb/core";
 import {
   Anchor,
   Card,
@@ -31,13 +31,12 @@ export const SettingsPage = ({ user }: Props) => {
       },
     },
   });
+  const userPublishedStateId =
+    userPublishedStatesQuery.data?.publishedStates[0]?.id;
 
   if (!settings) {
     return <Loader />;
   }
-
-  const userPublishedStateId = (userPublishedStatesQuery.data
-    ?.publishedStates || [])[0]?.id;
 
   return (
     <Tabs defaultValue="profile">
@@ -82,10 +81,10 @@ export const SettingsPage = ({ user }: Props) => {
                     },
                   }));
 
-                  if (!e.target.checked) {
+                  if (!e.target.checked && userPublishedStateId) {
                     db.transact(
-                      tx.publishedStates[userPublishedStateId].update({
-                        onChannelHash: null,
+                      db.tx.publishedStates[userPublishedStateId]!.update({
+                        onChannelHash: undefined,
                       }),
                     );
                   }
@@ -122,10 +121,10 @@ export const SettingsPage = ({ user }: Props) => {
                     },
                   }));
 
-                  if (!e.target.checked) {
+                  if (!e.target.checked && userPublishedStateId) {
                     db.transact(
-                      tx.publishedStates[userPublishedStateId].update({
-                        inChannelHash: null,
+                      db.tx.publishedStates[userPublishedStateId]!.update({
+                        inChannelHash: undefined,
                       }),
                     );
                   }

@@ -1,6 +1,6 @@
 import { i } from "@instantdb/core";
 
-const graph = i.graph(
+export const graph = i.graph(
   "d763dd10-2e46-4e73-943c-0158e8f343bf",
   {
     privateUsers: i.entity({
