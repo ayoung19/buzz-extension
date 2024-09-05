@@ -18,7 +18,7 @@ export const AppWrapper = () => {
     queryFn: async () => {
       const [tab] = await chrome.tabs.query({ active: true });
 
-      if (tab.url === undefined) {
+      if (tab?.url === undefined) {
         throw new Error("tab.url is undefined");
       }
 

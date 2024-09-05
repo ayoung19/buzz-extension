@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@emotion/react": "^11.13.3",
-    "@instantdb/core": "^0.12.21",
-    "@instantdb/react": "^0.12.21",
+    "@instantdb/core": "^0.12.22",
+    "@instantdb/react": "^0.12.22",
     "@mantine/core": "6.0.21",
     "@mantine/hooks": "^7.12.2",
     "@mantine/tiptap": "6.0.21",

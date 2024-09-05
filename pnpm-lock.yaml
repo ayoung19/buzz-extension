@@ -9,11 +9,11 @@ dependencies:
     specifier: ^11.13.3
     version: 11.13.3(@types/react@18.2.48)(react@18.2.0)
   "@instantdb/core":
-    specifier: ^0.12.21
-    version: 0.12.21
+    specifier: ^0.12.22
+    version: 0.12.22
   "@instantdb/react":
-    specifier: ^0.12.21
-    version: 0.12.21(react@18.2.0)
+    specifier: ^0.12.22
+    version: 0.12.22(react@18.2.0)
   "@mantine/core":
     specifier: 6.0.21
     version: 6.0.21(@emotion/react@11.13.3)(@mantine/hooks@7.12.2)(@types/react@18.2.48)(react-dom@18.2.0)(react@18.2.0)
@@ -888,10 +888,10 @@ packages:
       - supports-color
     dev: true
 
-  /@instantdb/core@0.12.21:
+  /@instantdb/core@0.12.22:
     resolution:
       {
-        integrity: sha512-HdWO9ReTi4m7aZIaFzpwjzI4eJQLe2/8ogLS70QMAKh1WxGV7ndj+0NTrbtRXKOl0ClPtPhM39XkE3PU50/ocg==,
+        integrity: sha512-5FSKup3BoEqtpQ1KzmVgNeBPYjLs5SzukR3V+aG7I9lzDwv6qSyloHyrlleW1UMn//4hfrgV3uKVVGxff2A1Jw==,
       }
     dependencies:
       immer: 9.0.14
@@ -899,15 +899,15 @@ packages:
       uuid: 9.0.1
     dev: false
 
-  /@instantdb/react@0.12.21(react@18.2.0):
+  /@instantdb/react@0.12.22(react@18.2.0):
     resolution:
       {
-        integrity: sha512-QobXDQxvxFVrylMzEL6d+JOI+F/6cxIhtJMh0QqZ3iVruXjbojh8/oqqful1yX0FaHUYeksvw77d6itBrGSqFw==,
+        integrity: sha512-CeMlU521rX5VpPmcKvLIQNjq1yNxFY23wvl1UX02q96TbWOtOm/UOogra+8m+GsEN1FLedvaG+g5XM8Se+Ac5Q==,
       }
     peerDependencies:
       react: ">=16"
     dependencies:
-      "@instantdb/core": 0.12.21
+      "@instantdb/core": 0.12.22
       react: 18.2.0
     dev: false
 

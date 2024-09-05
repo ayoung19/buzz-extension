@@ -1,4 +1,4 @@
-import { tx, type User } from "@instantdb/core";
+import { type User } from "@instantdb/core";
 import { Navbar, NavLink, Stack, Text, ThemeIcon } from "@mantine/core";
 import { IconSettings } from "@tabler/icons-react";
 import { useEffect, useMemo } from "react";
@@ -58,9 +58,8 @@ export const AppNavbar = ({ user, channels }: Props) => {
       },
     },
   });
-
-  const userPublishedStateId = (userPublishedStatesQuery.data
-    ?.publishedStates || [])[0]?.id;
+  const userPublishedStateId =
+    userPublishedStatesQuery.data?.publishedStates[0]?.id;
 
   // Publish the channel the user is in every time it changes.
   useEffect(() => {
@@ -71,10 +70,10 @@ export const AppNavbar = ({ user, channels }: Props) => {
     if (userPublishedStateId) {
       storage.set("userPublishedStateId", userPublishedStateId);
       db.transact([
-        tx.publishedStates[userPublishedStateId].update({
+        db.tx.publishedStates[userPublishedStateId]!.update({
           inChannelHash: location.pathname.startsWith("/channels/")
             ? channelToChannelHash(location.pathname.replace("/channels/", ""))
-            : null,
+            : undefined,
         }),
         // TODO: Uncomment this and it no longer properly updates on first
         // channel visit, only subsequent ones.

@@ -8,5 +8,6 @@
     },
     "baseUrl": ".",
     "strict": true,
+    "noUncheckedIndexedAccess": true,
   },
 }
