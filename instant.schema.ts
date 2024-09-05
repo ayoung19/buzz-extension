@@ -5,6 +5,7 @@ const graph = i.graph(
   {
     privateUsers: i.entity({
       email: i.string().unique(),
+      createdAt: i.number(),
     }),
     publicUsers: i.entity({
       displayName: i.string().unique(),
@@ -12,6 +13,13 @@ const graph = i.graph(
     publishedStates: i.entity({
       onChannelHash: i.string().optional().indexed(),
       inChannelHash: i.string().optional().indexed(),
+    }),
+    bookmarkedChannels: i.entity({
+      channel: i.string(),
+    }),
+    userIdAndChannelHashToLastRead: i.entity({
+      userIdAndChannelHash: i.string().unique(),
+      lastRead: i.number(),
     }),
     messages: i.entity({
       channelHash: i.string().indexed(),
@@ -39,6 +47,18 @@ const graph = i.graph(
       },
       reverse: {
         on: "publishedStates",
+        has: "one",
+        label: "privateUser",
+      },
+    },
+    privateUserBookmarkedChannels: {
+      forward: {
+        on: "privateUsers",
+        has: "many",
+        label: "bookmarkedChannels",
+      },
+      reverse: {
+        on: "bookmarkedChannels",
         has: "one",
         label: "privateUser",
       },

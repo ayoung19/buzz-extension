@@ -11,6 +11,9 @@ const db = init<{
     onChannelHash?: string;
     inChannelHash?: string;
   };
+  bookmarkedChannels: {
+    channel: string;
+  };
   messages: {
     channelHash: string;
     content: string;

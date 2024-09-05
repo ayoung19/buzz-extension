@@ -4,7 +4,6 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Storage } from "@plasmohq/storage";
 
 import db from "~popup/utils/db";
-
 import { App } from "./App";
 
 const storage = new Storage({
@@ -32,9 +31,8 @@ export const AppWrapper = () => {
   }, []);
 
   useEffect(() => {
-    storage.set("userId", authQuery.user?.id);
     storage.set("userRefreshToken", authQuery.user?.refresh_token);
-  }, [authQuery.user?.id, authQuery.user?.refresh_token]);
+  }, [authQuery.user?.refresh_token]);
 
   if (urlQuery.isPending || authQuery.isLoading) {
     return <></>;
