@@ -12,6 +12,7 @@ import { channelToChannelHash } from "~popup/utils/hash";
 
 import { UnreadMessagesIndicator } from "./UnreadMessagesIndicator";
 import { UsersInChannelBadge } from "./UsersInChannelBadge";
+import { UsersOnChannelBadge } from "./UsersOnChannelBadge";
 
 const storage = new Storage({
   area: "local",
@@ -104,15 +105,30 @@ export const AppNavbar = ({ user, channels }: Props) => {
               {userBookmarkedChannels.map((channel) => (
                 <NavLink
                   key={channel}
-                  label={<Text size="sm">{channel}</Text>}
+                  label={
+                    <Text
+                      size="sm"
+                      sx={{
+                        width: "100%",
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {channel}
+                    </Text>
+                  }
                   variant="light"
                   active={`/channels/${channel}` === location.pathname}
                   onClick={() => history.push(`/channels/${channel}`)}
-                  rightSection={
-                    <UnreadMessagesIndicator user={user} channel={channel}>
-                      <UsersInChannelBadge channel={channel} />
-                    </UnreadMessagesIndicator>
-                  }
+                  // rightSection={
+                  //   <UnreadMessagesIndicator user={user} channel={channel}>
+                  //     <Stack spacing="xs">
+                  //       <UsersInChannelBadge channel={channel} />
+                  //       <UsersOnChannelBadge channel={channel} />
+                  //     </Stack>
+                  //   </UnreadMessagesIndicator>
+                  // }
+                  noWrap
                 />
               ))}
             </>
@@ -124,18 +140,29 @@ export const AppNavbar = ({ user, channels }: Props) => {
             <NavLink
               key={channel}
               label={
-                <Text size="sm">
+                <Text
+                  size="sm"
+                  sx={{
+                    width: "100%",
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                  }}
+                >
                   {channel.substring(channel.lastIndexOf("/") + 1)}
                 </Text>
               }
               variant="light"
               active={`/channels/${channel}` === location.pathname}
               onClick={() => history.push(`/channels/${channel}`)}
-              rightSection={
-                <UnreadMessagesIndicator user={user} channel={channel}>
-                  <UsersInChannelBadge channel={channel} />
-                </UnreadMessagesIndicator>
-              }
+              // rightSection={
+              //   <UnreadMessagesIndicator user={user} channel={channel}>
+              //     <Stack spacing="xs">
+              //       <UsersInChannelBadge channel={channel} />
+              //       <UsersOnChannelBadge channel={channel} />
+              //     </Stack>
+              //   </UnreadMessagesIndicator>
+              // }
+              noWrap
             />
           ))}
         </Stack>

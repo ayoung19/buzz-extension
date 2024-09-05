@@ -3,8 +3,9 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
 import { Storage } from "@plasmohq/storage";
 
-import db from "~popup/utils/db";
 import { App } from "./App";
+import db from "./utils/db";
+import { getPathnameSegments } from "./utils/pathname";
 
 const storage = new Storage({
   area: "local",
@@ -16,7 +17,10 @@ export const AppWrapper = () => {
   const urlQuery = useQuery({
     queryKey: [""],
     queryFn: async () => {
-      const [tab] = await chrome.tabs.query({ active: true });
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        lastFocusedWindow: true,
+      });
 
       if (tab?.url === undefined) {
         throw new Error("tab.url is undefined");
@@ -55,14 +59,10 @@ export const AppWrapper = () => {
   return (
     <App
       user={authQuery.user}
-      channels={urlQuery.data.pathname
-        .split("/")
-        .filter((x) => x.length > 0)
-        .map((x) => `/${x}`)
-        .reduce(
-          (acc, curr) => [...acc, acc[acc.length - 1] + curr],
-          [urlQuery.data.hostname],
-        )}
+      channels={getPathnameSegments(urlQuery.data.pathname).reduce(
+        (acc, curr) => [...acc, acc[acc.length - 1] + curr],
+        [urlQuery.data.hostname],
+      )}
     />
   );
 };
