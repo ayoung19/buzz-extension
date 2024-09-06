@@ -20,19 +20,15 @@ export const BookmarkChannelIcon = ({ user, channel }: Props) => {
       },
     },
   });
-
-  if (bookmarkedChannelsQuery.isLoading || bookmarkedChannelsQuery.error) {
-    return null;
-  }
-
-  const isBookmarked = !!bookmarkedChannelsQuery.data.bookmarkedChannels.length;
+  const bookmarkedChannels =
+    bookmarkedChannelsQuery.data?.bookmarkedChannels || [];
 
   return (
     <ActionIcon
       onClick={() =>
-        isBookmarked
+        bookmarkedChannels.length > 0
           ? db.transact(
-              bookmarkedChannelsQuery.data.bookmarkedChannels.map(({ id }) =>
+              bookmarkedChannels.map(({ id }) =>
                 db.tx.bookmarkedChannels[id]!.delete(),
               ),
             )
@@ -42,8 +38,14 @@ export const BookmarkChannelIcon = ({ user, channel }: Props) => {
               }),
             )
       }
+      sx={{
+        visibility:
+          bookmarkedChannelsQuery.isLoading || bookmarkedChannelsQuery.error
+            ? "hidden"
+            : "visible",
+      }}
     >
-      {isBookmarked ? (
+      {bookmarkedChannels.length > 0 ? (
         <IconStarFilled size="1.125rem" />
       ) : (
         <IconStar size="1.125rem" />
