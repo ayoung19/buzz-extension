@@ -4,22 +4,18 @@ import { IconSettings } from "@tabler/icons-react";
 import { useEffect, useMemo } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 
-
-
 import { Storage } from "@plasmohq/storage";
-
-
 
 import { useSettings } from "~popup/hooks/useSettings";
 import db from "~popup/utils/db";
-import { channelToChannelHash, userIdAndChannelToUserIdAndChannelHash } from "~popup/utils/hash";
-
-
+import {
+  channelToChannelHash,
+  userIdAndChannelToUserIdAndChannelHash,
+} from "~popup/utils/hash";
 
 import { UnreadMessagesIndicator } from "./UnreadMessagesIndicator";
 import { UsersInChannelBadge } from "./UsersInChannelBadge";
 import { UsersOnChannelBadge } from "./UsersOnChannelBadge";
-
 
 const storage = new Storage({
   area: "local",
